@@ -7,8 +7,11 @@
 //
 
 #import "ViewController.h"
+
+#ifdef WINOBJC
 #import <UWP/WindowsUIXamlControlsMaps.h>
 #import <UWP/WindowsDevicesGeolocation.h>
+#endif
 
 @interface ViewController ()
 @property (strong, nonatomic) UIButton *trafficToggle;
@@ -16,6 +19,8 @@
 #ifdef WINOBJC
 @property (strong, nonatomic) WUXCMMapControl *map;
 @property (strong, nonatomic) UIView *mapView;
+#else 
+@property (strong, nonatomic) MKMapView *mapView;
 #endif
 
 @end
@@ -69,7 +74,16 @@
 	[self.mapView setNativeElement:self.map];
 	[self.trafficToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[self.view addSubview:self.mapView];
-	#endif
+	#else
+    CLLocationDistance radiusMeters = 10000;
+    CLLocationCoordinate2D newYorkGeopoint = CLLocationCoordinate2DMake(lat, lon);
+    MKCoordinateRegion mapCenter = MKCoordinateRegionMakeWithDistance(newYorkGeopoint, radiusMeters, radiusMeters);
+    
+    self.mapView = [[MKMapView alloc] init];
+    [self.mapView setRegion:mapCenter animated:YES];
+    [self.mapView setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.view addSubview:self.mapView];
+    #endif
 
 	
     // set layout constraints
@@ -78,7 +92,7 @@
                              @"overlayToggle"   : self.overlayToggle,
 							 @"map"    : self.mapView
                              };
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-[map(mapHeight)]-[overlayToggle][trafficToggle]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-50-[map(mapHeight)]-[overlayToggle][trafficToggle]"
                                                                      options:0
                                                                      metrics:metrics
                                                                        views:views]];
@@ -103,22 +117,14 @@
 }
 
 - (void)trafficTogglePressed {
-    //self.map.showsTraffic = !self.map.showsTraffic;
 	#ifdef WINOBJC
 	self.map.trafficFlowVisible = !self.map.trafficFlowVisible;
-	#endif
-
-
+	#else
+    self.mapView.showsTraffic = !self.mapView.showsTraffic;
+    #endif
 }
 
 - (void)overlayTogglePressed {
-    /*if (self.map.mapType == MKMapTypeStandard) {
-        self.map.mapType = MKMapTypeHybrid;
-    }
-    else {
-        self.map.mapType = MKMapTypeStandard;
-    }*/
-
 	#ifdef WINOBJC
 	if (self.map.style == WUXCMMapStyleRoad) {
 	    self.map.style = WUXCMMapStyleAerialWithRoads;
@@ -126,7 +132,14 @@
 	else {
 	    self.map.style = WUXCMMapStyleRoad;
 	}
-	#endif
+	#else
+    if (self.mapView.mapType == MKMapTypeStandard) {
+        self.mapView.mapType = MKMapTypeHybrid;
+    }
+    else {
+        self.mapView.mapType = MKMapTypeStandard;
+    }
+    #endif
     
     
 }
