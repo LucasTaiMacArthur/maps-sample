@@ -7,12 +7,16 @@
 //
 
 #import "ViewController.h"
+#import <UWP/WindowsUIXamlControlsMaps.h>
+#import <UWP/WindowsDevicesGeolocation.h>
 
 @interface ViewController ()
 @property (strong, nonatomic) UIButton *trafficToggle;
 @property (strong, nonatomic) UIButton *overlayToggle;
-@property (strong, nonatomic) MKMapView *map;
-
+#ifdef WINOBJC
+@property (strong, nonatomic) WUXCMMapControl *map;
+@property (strong, nonatomic) UIView *mapView;
+#endif
 
 @end
 
@@ -21,6 +25,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+	
     
     // set up traffic toggle button
     self.trafficToggle = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -43,24 +48,37 @@
     [self.view addSubview:self.overlayToggle];
     
     // set up the mapview with New York map center
-    float lat = 40.722;
-    float lon = -74.001;
-    CLLocationDistance radiusMeters = 10000;
-    CLLocationCoordinate2D newYorkGeopoint = CLLocationCoordinate2DMake(lat, lon);
-    MKCoordinateRegion mapCenter = MKCoordinateRegionMakeWithDistance(newYorkGeopoint, radiusMeters, radiusMeters);
     
-    self.map = [[MKMapView alloc] init];
-    [self.map setRegion:mapCenter animated:YES];
-    [self.map setTranslatesAutoresizingMaskIntoConstraints:NO];
-    [self.view addSubview:self.map];
+	double lat = 40.722;
+    double lon = -74.001;
+	double altitude = 0;
 
+	#ifdef WINOBJC
+
+	WDGBasicGeoposition *NewYork = [[WDGBasicGeoposition alloc] init];
+	NewYork.latitude = lat;
+    NewYork.longitude = lon;
+    NewYork.altitude = altitude;
+	WDGGeopoint *newYorkGeopoint = [WDGGeopoint make:NewYork];	
+    self.map = [WUXCMMapControl make];
+	self.map.center = newYorkGeopoint;
+	self.map.zoomLevel = 11;
+
+	CGRect mapFrame = CGRectMake(10, 10, 400, 600);
+	self.mapView = [[UIView alloc] initWithFrame:mapFrame];
+	[self.mapView setNativeElement:self.map];
+	[self.trafficToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
+	[self.view addSubview:self.mapView];
+	#endif
+
+	
     // set layout constraints
-    NSDictionary *metrics = @{ @"pad": @80.0, @"margin": @40, @"mapHeight": @400 };
+    NSDictionary *metrics = @{ @"pad": @80.0, @"margin": @40, @"mapHeight": @350 };
     NSDictionary *views = @{ @"trafficToggle"   : self.trafficToggle,
                              @"overlayToggle"   : self.overlayToggle,
-                             @"map"   : self.map
+							 @"map"    : self.mapView
                              };
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-100-[map(mapHeight)]-[overlayToggle][trafficToggle]"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-[map(mapHeight)]-[overlayToggle][trafficToggle]"
                                                                      options:0
                                                                      metrics:metrics
                                                                        views:views]];
@@ -72,10 +90,12 @@
                                                                       options:0
                                                                       metrics:metrics
                                                                         views:views]];
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
+	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
                                                                       options:0
                                                                       metrics:metrics
                                                                         views:views]];
+
+    
     
     
     
@@ -83,17 +103,30 @@
 }
 
 - (void)trafficTogglePressed {
-    self.map.showsTraffic = !self.map.showsTraffic;
+    //self.map.showsTraffic = !self.map.showsTraffic;
+	#ifdef WINOBJC
+	self.map.trafficFlowVisible = !self.map.trafficFlowVisible;
+	#endif
+
 
 }
 
 - (void)overlayTogglePressed {
-    if (self.map.mapType == MKMapTypeStandard) {
+    /*if (self.map.mapType == MKMapTypeStandard) {
         self.map.mapType = MKMapTypeHybrid;
     }
     else {
         self.map.mapType = MKMapTypeStandard;
-    }
+    }*/
+
+	#ifdef WINOBJC
+	if (self.map.style == WUXCMMapStyleRoad) {
+	    self.map.style = WUXCMMapStyleAerialWithRoads;
+	}
+	else {
+	    self.map.style = WUXCMMapStyleRoad;
+	}
+	#endif
     
     
 }
@@ -104,3 +137,16 @@
 }
 
 @end
+
+#ifdef WINOBJC
+// Tell the WinObjC runtime how large to render the application (From github.com/Microsoft/WinObjC/samples/HelloUI)
+@implementation UIApplication (UIApplicationInitialStartupMode)
++ (void)setStartupDisplayMode:(WOCDisplayMode*)mode {
+    mode.autoMagnification = TRUE;
+    mode.sizeUIWindowToFit = TRUE;
+    mode.fixedWidth = 0;
+    mode.fixedHeight = 0;
+    mode.magnification = 1.0;
+}
+@end
+#endif
