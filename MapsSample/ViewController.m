@@ -104,10 +104,15 @@
                                                                       options:0
                                                                       metrics:metrics
                                                                         views:views]];
-	[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
+
+    #ifdef WINOBJC
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.mapView attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.trafficToggle attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0]];
+    #else
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
                                                                       options:0
                                                                       metrics:metrics
                                                                         views:views]];
+    #endif
 
     
     
