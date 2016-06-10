@@ -37,7 +37,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-	
+    
     
     // set up traffic toggle button
     self.trafficToggle = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -61,31 +61,31 @@
     
     // set up the mapview with New York map center
     
-	double lat = 40.722;
+    double lat = 40.722;
     double lon = -74.001;
     
     // UWP requires a MapControl set inside an UIKit UIView
-	#ifdef WINOBJC
+    #ifdef WINOBJC
     double offset = [self mapFrameOffset];
-	double altitude = 0.0;
-	WDGBasicGeoposition *NewYork = [[WDGBasicGeoposition alloc] init];
-	NewYork.latitude = lat;
+    double altitude = 0.0;
+    WDGBasicGeoposition *NewYork = [[WDGBasicGeoposition alloc] init];
+    NewYork.latitude = lat;
     NewYork.longitude = lon;
     NewYork.altitude = altitude;
-	WDGGeopoint *newYorkGeopoint = [WDGGeopoint make:NewYork];
+    WDGGeopoint *newYorkGeopoint = [WDGGeopoint make:NewYork];
     
     self.map = [WUXCMMapControl make];
-	self.map.center = newYorkGeopoint;
-	self.map.zoomLevel = 11;
+    self.map.center = newYorkGeopoint;
+    self.map.zoomLevel = 11;
     self.map.mapServiceToken = @"YOUR_API_KEY_HERE";
-	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
-	self.mapView = [[UIView alloc] initWithFrame:mapFrame];
-	[self.mapView setNativeElement:self.map];
-	[self.trafficToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
-	[self.view addSubview:self.mapView];
+    CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
+    self.mapView = [[UIView alloc] initWithFrame:mapFrame];
+    [self.mapView setNativeElement:self.map];
+    [self.trafficToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.view addSubview:self.mapView];
     
     // iOS requires a MapKit MKMapview
-	#else
+    #else
     CLLocationDistance radiusMeters = 10000;
     CLLocationCoordinate2D newYorkGeopoint = CLLocationCoordinate2DMake(lat, lon);
     MKCoordinateRegion mapCenter = MKCoordinateRegionMakeWithDistance(newYorkGeopoint, radiusMeters, radiusMeters);
@@ -95,12 +95,12 @@
     [self.view addSubview:self.mapView];
     #endif
 
-	
+    
     // set platform agnostic constraints
     NSDictionary *metrics = @{ @"pad": @80.0, @"margin": @40, @"mapHeight": @350};
     NSDictionary *views = @{ @"trafficToggle"   : self.trafficToggle,
                              @"overlayToggle"   : self.overlayToggle,
-							 @"map"    : self.mapView
+                             @"map"    : self.mapView
                              };
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-50-[map(mapHeight)]-[overlayToggle][trafficToggle]"
                                                                      options:0
@@ -132,22 +132,22 @@
 }
 // Toggle the traffic on and off
 - (void)trafficTogglePressed {
-	#ifdef WINOBJC
-	self.map.trafficFlowVisible = !self.map.trafficFlowVisible;
-	#else
+    #ifdef WINOBJC
+    self.map.trafficFlowVisible = !self.map.trafficFlowVisible;
+    #else
     self.mapView.showsTraffic = !self.mapView.showsTraffic;
     #endif
 }
 
 // Toggle the overlay between aerial and road.
 - (void)overlayTogglePressed {
-	#ifdef WINOBJC
-	if (self.map.style == WUXCMMapStyleRoad) {
-	    self.map.style = WUXCMMapStyleAerialWithRoads;
-	} else {
-	    self.map.style = WUXCMMapStyleRoad;
-	}
-	#else
+    #ifdef WINOBJC
+    if (self.map.style == WUXCMMapStyleRoad) {
+        self.map.style = WUXCMMapStyleAerialWithRoads;
+    } else {
+        self.map.style = WUXCMMapStyleRoad;
+    }
+    #else
     if (self.mapView.mapType == MKMapTypeStandard) {
         self.mapView.mapType = MKMapTypeHybrid;
     } else {
@@ -168,19 +168,19 @@
 // override to change the UIView containing the WinObjC MapControl to resize with the window
 // UIView containing MapControl in UWP requires this, but the MKMapview in iOS does not.
 - (void)viewWillLayoutSubviews{
-	[super viewWillLayoutSubviews];
-	double offset = [self mapFrameOffset];
-	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
-	self.mapView.frame = mapFrame;
+    [super viewWillLayoutSubviews];
+    double offset = [self mapFrameOffset];
+    CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
+    self.mapView.frame = mapFrame;
 }
 #endif
 
 // Calculate the offset that will allow the 400 width map to sit in the center of the parent view
 - (double)mapFrameOffset {
-	CGRect screenBounds = [UIScreen mainScreen].bounds;
-	float screenwidth = screenBounds.size.width;
-	float offset = (screenwidth-400)/2.0;
-	return offset;
+    CGRect screenBounds = [UIScreen mainScreen].bounds;
+    float screenwidth = screenBounds.size.width;
+    float offset = (screenwidth-400)/2.0;
+    return offset;
 }
 
 @end
