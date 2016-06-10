@@ -57,7 +57,7 @@
 	double lat = 40.722;
     double lon = -74.001;
 	double altitude = 0;
-
+	double offset = [self mapFrameOffset];
 	#ifdef WINOBJC
 
 	WDGBasicGeoposition *NewYork = [[WDGBasicGeoposition alloc] init];
@@ -69,7 +69,7 @@
 	self.map.center = newYorkGeopoint;
 	self.map.zoomLevel = 11;
 
-	CGRect mapFrame = CGRectMake(10, 10, 400, 600);
+	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
 	self.mapView = [[UIView alloc] initWithFrame:mapFrame];
 	[self.mapView setNativeElement:self.map];
 	[self.trafficToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -81,13 +81,13 @@
     
     self.mapView = [[MKMapView alloc] init];
     [self.mapView setRegion:mapCenter animated:YES];
-    [self.mapView setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.mapView setTranslatesAutoresizingMaskIntoConstraints:YES];
     [self.view addSubview:self.mapView];
     #endif
 
 	
     // set layout constraints
-    NSDictionary *metrics = @{ @"pad": @80.0, @"margin": @40, @"mapHeight": @350 };
+    NSDictionary *metrics = @{ @"pad": @80.0, @"margin": @40, @"mapHeight": @350};
     NSDictionary *views = @{ @"trafficToggle"   : self.trafficToggle,
                              @"overlayToggle"   : self.overlayToggle,
 							 @"map"    : self.mapView
@@ -105,14 +105,11 @@
                                                                       metrics:metrics
                                                                         views:views]];
 
-    #ifdef WINOBJC
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.mapView attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual toItem:self.trafficToggle attribute:NSLayoutAttributeCenterX multiplier:1.0 constant:0.0]];
-    #else
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
+    /*[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-200-[map]-200-|"
                                                                       options:0
                                                                       metrics:metrics
-                                                                        views:views]];
-    #endif
+                                                                        views:views]];*/
+    
 
     
     
@@ -153,6 +150,27 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
+- (void)viewWillLayoutSubviews{
+	// override to change the UIview containing the WinObjC MapControl to resize with the window
+	[super viewWillLayoutSubviews];
+	#ifdef WINOBJC
+	double offset = [self mapFrameOffset];
+	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
+	self.mapView.frame = mapFrame;
+	#endif
+
+}
+
+#ifdef WINOBJC
+// Updates the frame of the MapControl UIView when the screen changes to ensure proper orientation
+- (double)mapFrameOffset {
+	CGRect screenBounds = [UIScreen mainScreen].bounds;
+	float screenwidth = screenBounds.size.width;
+	float offset = (screenwidth-400)/2.0;
+	return offset;
+}
+#endif
 
 @end
 
