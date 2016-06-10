@@ -59,7 +59,7 @@
     
 	#ifdef WINOBJC
     double offset = [self mapFrameOffset];
-	double altitude = 0.0;
+	double altitude = 0.0;a
 	WDGBasicGeoposition *NewYork = [[WDGBasicGeoposition alloc] init];
 	NewYork.latitude = lat;
     NewYork.longitude = lon;
