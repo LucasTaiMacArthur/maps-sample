@@ -34,10 +34,8 @@
 
 @implementation ViewController
 
-#ifdef WINOBJC
 NSString * const kTrafficToggleString = @"Toggle Traffic";
 NSString * const kOverlayToggleString = @"Toggle Overlay";
-#endif 
 
 - (void)viewDidLoad {
     [super viewDidLoad];
