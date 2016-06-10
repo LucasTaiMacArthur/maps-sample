@@ -56,10 +56,9 @@
     
 	double lat = 40.722;
     double lon = -74.001;
-	double altitude = 0;
-	double offset = [self mapFrameOffset];
+    
 	#ifdef WINOBJC
-
+    double offset = [self mapFrameOffset];
 	WDGBasicGeoposition *NewYork = [[WDGBasicGeoposition alloc] init];
 	NewYork.latitude = lat;
     NewYork.longitude = lon;
@@ -81,7 +80,7 @@
     
     self.mapView = [[MKMapView alloc] init];
     [self.mapView setRegion:mapCenter animated:YES];
-    [self.mapView setTranslatesAutoresizingMaskIntoConstraints:YES];
+    [self.mapView setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self.view addSubview:self.mapView];
     #endif
 
@@ -105,10 +104,12 @@
                                                                       metrics:metrics
                                                                         views:views]];
 
-    /*[self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-200-[map]-200-|"
+    #ifndef WINOBJC
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
                                                                       options:0
                                                                       metrics:metrics
-                                                                        views:views]];*/
+                                                                        views:views]];
+    #endif
     
 
     
@@ -151,18 +152,17 @@
     // Dispose of any resources that can be recreated.
 }
 
+#ifdef WINOBJC
 - (void)viewWillLayoutSubviews{
 	// override to change the UIview containing the WinObjC MapControl to resize with the window
 	[super viewWillLayoutSubviews];
-	#ifdef WINOBJC
 	double offset = [self mapFrameOffset];
 	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
 	self.mapView.frame = mapFrame;
-	#endif
-
 }
+#endif
 
-#ifdef WINOBJC
+
 // Updates the frame of the MapControl UIView when the screen changes to ensure proper orientation
 - (double)mapFrameOffset {
 	CGRect screenBounds = [UIScreen mainScreen].bounds;
@@ -170,7 +170,6 @@
 	float offset = (screenwidth-400)/2.0;
 	return offset;
 }
-#endif
 
 @end
 
