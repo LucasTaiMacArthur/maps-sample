@@ -64,6 +64,7 @@
 	double lat = 40.722;
     double lon = -74.001;
     
+    // UWP requires a MapControl set inside an UIKit UIView
 	#ifdef WINOBJC
     double offset = [self mapFrameOffset];
 	double altitude = 0.0;
@@ -71,21 +72,23 @@
 	NewYork.latitude = lat;
     NewYork.longitude = lon;
     NewYork.altitude = altitude;
-	WDGGeopoint *newYorkGeopoint = [WDGGeopoint make:NewYork];	
+	WDGGeopoint *newYorkGeopoint = [WDGGeopoint make:NewYork];
+    
     self.map = [WUXCMMapControl make];
 	self.map.center = newYorkGeopoint;
 	self.map.zoomLevel = 11;
-
+    self.map.mapServiceToken = @"YOUR_API_KEY_HERE";
 	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
 	self.mapView = [[UIView alloc] initWithFrame:mapFrame];
 	[self.mapView setNativeElement:self.map];
 	[self.trafficToggle setTranslatesAutoresizingMaskIntoConstraints:NO];
 	[self.view addSubview:self.mapView];
+    
+    // iOS requires a MapKit MKMapview
 	#else
     CLLocationDistance radiusMeters = 10000;
     CLLocationCoordinate2D newYorkGeopoint = CLLocationCoordinate2DMake(lat, lon);
     MKCoordinateRegion mapCenter = MKCoordinateRegionMakeWithDistance(newYorkGeopoint, radiusMeters, radiusMeters);
-    
     self.mapView = [[MKMapView alloc] init];
     [self.mapView setRegion:mapCenter animated:YES];
     [self.mapView setTranslatesAutoresizingMaskIntoConstraints:NO];
@@ -93,7 +96,7 @@
     #endif
 
 	
-    // set layout constraints
+    // set platform agnostic constraints
     NSDictionary *metrics = @{ @"pad": @80.0, @"margin": @40, @"mapHeight": @350};
     NSDictionary *views = @{ @"trafficToggle"   : self.trafficToggle,
                              @"overlayToggle"   : self.overlayToggle,
@@ -112,6 +115,7 @@
                                                                       metrics:metrics
                                                                         views:views]];
 
+    // in iOS, we can use constraints to layout the MKMapview, doesn't work with UIView in UWP
     #ifndef WINOBJC
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[map]-|"
                                                                       options:0
@@ -126,7 +130,7 @@
     
     
 }
-
+// Toggle the traffic on and off
 - (void)trafficTogglePressed {
 	#ifdef WINOBJC
 	self.map.trafficFlowVisible = !self.map.trafficFlowVisible;
@@ -135,19 +139,18 @@
     #endif
 }
 
+// Toggle the overlay between aerial and road.
 - (void)overlayTogglePressed {
 	#ifdef WINOBJC
 	if (self.map.style == WUXCMMapStyleRoad) {
 	    self.map.style = WUXCMMapStyleAerialWithRoads;
-	}
-	else {
+	} else {
 	    self.map.style = WUXCMMapStyleRoad;
 	}
 	#else
     if (self.mapView.mapType == MKMapTypeStandard) {
         self.mapView.mapType = MKMapTypeHybrid;
-    }
-    else {
+    } else {
         self.mapView.mapType = MKMapTypeStandard;
     }
     #endif
@@ -155,14 +158,16 @@
     
 }
 
+// Dispose of any resources that can be recreated.
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
+
 #ifdef WINOBJC
+// override to change the UIView containing the WinObjC MapControl to resize with the window
+// UIView containing MapControl in UWP requires this, but the MKMapview in iOS does not.
 - (void)viewWillLayoutSubviews{
-	// override to change the UIview containing the WinObjC MapControl to resize with the window
 	[super viewWillLayoutSubviews];
 	double offset = [self mapFrameOffset];
 	CGRect mapFrame = CGRectMake(offset, 10, 400, 600);
@@ -170,8 +175,7 @@
 }
 #endif
 
-
-// Updates the frame of the MapControl UIView when the screen changes to ensure proper orientation
+// Calculate the offset that will allow the 400 width map to sit in the center of the parent view
 - (double)mapFrameOffset {
 	CGRect screenBounds = [UIScreen mainScreen].bounds;
 	float screenwidth = screenBounds.size.width;
@@ -182,7 +186,8 @@
 @end
 
 #ifdef WINOBJC
-// Tell the WinObjC runtime how large to render the application (From github.com/Microsoft/WinObjC/samples/HelloUI)
+// Tell the WinObjC runtime how large to render the application
+// (Found at github.com/Microsoft/WinObjC/samples/HelloUI)
 @implementation UIApplication (UIApplicationInitialStartupMode)
 + (void)setStartupDisplayMode:(WOCDisplayMode*)mode {
     mode.autoMagnification = TRUE;
